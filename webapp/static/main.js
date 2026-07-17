@@ -383,7 +383,7 @@ async function checkVersion() {
       if (data.update_available && safeLatest) {
         // Build link element with DOM API to avoid innerHTML XSS
         const a = document.createElement('a');
-        a.href = 'https://github.com/samatild/SOSParser/blob/main/README.md#update';
+        a.href = 'https://github.com/pramodkz/LinuxSOSparser/blob/main/README.md#update';
         a.target = '_blank';
         a.rel = 'noopener noreferrer';
         a.className = 'version-outdated';
