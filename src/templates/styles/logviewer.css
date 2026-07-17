@@ -1,0 +1,361 @@
+/* SOSParser Advanced Log Viewer Styles */
+
+.logviewer {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+/* Toolbar */
+.logviewer-toolbar {
+  background: var(--bg-tertiary);
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.logviewer-search {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex: 1;
+  min-width: 300px;
+}
+
+.logviewer-search-input {
+  flex: 1;
+  padding: 0.5rem;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+.logviewer-search-input:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+}
+
+.logviewer-search-buttons {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.logviewer-match-count {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  min-width: 80px;
+  font-family: monospace;
+}
+
+/* Options */
+.logviewer-options {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.logviewer-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.logviewer-checkbox input[type="checkbox"] {
+  cursor: pointer;
+}
+
+/* Filters */
+.logviewer-filters {
+  background: var(--bg-tertiary);
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.logviewer-filter-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.logviewer-filter-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.375rem 0.75rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.15s;
+}
+
+.logviewer-filter-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+}
+
+.logviewer-filter-btn.active {
+  background: var(--accent-primary);
+  color: var(--bg-primary);
+  border-color: var(--accent-primary);
+}
+
+.filter-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.filter-indicator.error { background: var(--error); }
+.filter-indicator.warning { background: var(--warning); }
+.filter-indicator.info { background: var(--info); }
+.filter-indicator.debug { background: var(--text-muted); }
+
+.logviewer-filter-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 1rem;
+  font-size: 0.75rem;
+}
+
+.logviewer-filter-stats span {
+  font-family: monospace;
+}
+
+.stat-error { color: var(--error); }
+.stat-warning { color: var(--warning); }
+.stat-info { color: var(--info); }
+.stat-debug { color: var(--text-muted); }
+
+/* Actions */
+.logviewer-actions {
+  background: var(--bg-tertiary);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  gap: 0.5rem;
+}
+
+.logviewer-btn {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.375rem 0.875rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.logviewer-btn:hover {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.logviewer-btn-small {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  min-width: 32px;
+}
+
+/* Content */
+.logviewer-content {
+  background: var(--bg-primary);
+  overflow-x: auto;
+  overflow-y: auto;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  position: relative;
+}
+
+.logviewer-content.nowrap .logviewer-line-content {
+  white-space: nowrap;
+}
+
+/* Virtual scroll spacer — sets total scrollable height */
+.logviewer-spacer {
+  width: 1px;
+  pointer-events: none;
+}
+
+.logviewer-lines {
+  min-width: 100%;
+}
+
+.logviewer-line {
+  display: flex;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+  transition: background 0.15s;
+  overflow: hidden;
+}
+
+.logviewer-line:hover {
+  background: var(--bg-hover);
+}
+
+.logviewer-line.logviewer-current-match {
+  background: rgba(0, 217, 255, 0.1);
+  border-left: 3px solid var(--accent-primary);
+}
+
+.logviewer-line-number {
+  display: inline-block;
+  min-width: 50px;
+  padding: 0 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.logviewer-line-content {
+  flex: 1;
+  padding: 0 0.75rem;
+  color: var(--text-secondary);
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+/* Log Level Styling */
+.log-error {
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.log-error .logviewer-line-content {
+  color: var(--error);
+}
+
+.log-warning {
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.log-warning .logviewer-line-content {
+  color: var(--warning);
+}
+
+.log-info {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.log-info .logviewer-line-content {
+  color: var(--info);
+}
+
+.log-debug {
+  background: rgba(107, 114, 128, 0.05);
+}
+
+.log-debug .logviewer-line-content {
+  color: var(--text-muted);
+}
+
+/* Highlight */
+.logviewer-highlight {
+  background: var(--warning);
+  color: var(--bg-primary);
+  padding: 0 2px;
+  border-radius: 2px;
+  font-weight: bold;
+}
+
+.logviewer-current-match .logviewer-highlight {
+  background: var(--accent-primary);
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Empty State */
+.logviewer-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* Status Bar */
+.logviewer-statusbar {
+  background: var(--bg-tertiary);
+  padding: 0.5rem 0.75rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-family: monospace;
+}
+
+/* Scrollbar styling */
+.logviewer-content::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.logviewer-content::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+.logviewer-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 5px;
+}
+
+.logviewer-content::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .logviewer-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .logviewer-search {
+    min-width: 100%;
+  }
+  
+  .logviewer-options {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .logviewer-line-number {
+    min-width: 40px;
+    padding: 0 0.5rem;
+  }
+  
+  .logviewer-filter-stats {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+}

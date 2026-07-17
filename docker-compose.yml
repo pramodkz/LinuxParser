@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  sosparser:
+    build: .
+    container_name: sosparser
+    ports:
+      - "8000:8000"
+    # Gunicorn config:
+    #   --timeout 1800: Allow up to 30 min for large file extraction + analysis
+    #   --graceful-timeout 1800: Grace period before force kill
+    #   --keep-alive 75: Keep connections alive longer for chunked uploads
+    #   --workers 2: Handle concurrent uploads (adjust based on CPU cores)
+    command: >
+      gunicorn
+      --bind 0.0.0.0:8000
+      --timeout 1800
+      --graceful-timeout 1800
+      --keep-alive 75
+      --workers 2
+      --worker-class sync
+      webapp.wsgi:application
+    volumes:
+      # Mount uploads and outputs for persistence (optional)
+      - ./data/uploads:/app/webapp/uploads
+      - ./data/outputs:/app/webapp/outputs
+    environment:
+      - WEBAPP_HOST=0.0.0.0
+      - WEBAPP_PORT=8000
+      - WEBAPP_MAX_CONTENT_MB=2048
+      - FLASK_ENV=production
+      # Public mode: Set to "true" to enable audit logging and disable report persistence
+      # When enabled, comprehensive audit logs are written to stdout for monitoring
+      - PUBLIC_MODE=false
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s

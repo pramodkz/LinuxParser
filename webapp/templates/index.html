@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SOSParser</title>
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('report_images', filename='favicon.svg') }}">
+    <!-- Apply saved theme before first paint to avoid flash -->
+    <script>try{var t=localStorage.getItem('sosparser-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
+  </head>
+  <body>
+    <div class="page-wrapper">
+      <header class="header">
+        <div class="container">
+          <div class="header-content">
+            <div class="title-section">
+              <h1>SOSParser</h1>
+              <p class="subtitle">Linux diagnostic file parser and analyzer</p>
+              <p class="format-support">Supports SOSReport & Supportconfig formats</p>
+            </div>
+            <div class="header-actions">
+              {% if not public_mode %}
+              <button type="button" class="btn-secondary" id="browse-reports-btn">Saved Reports</button>
+              {% endif %}
+              <button id="theme-toggle" class="theme-toggle" title="Toggle light/dark theme" aria-label="Toggle theme">
+                <!-- Sun: shown in dark mode → switch to light -->
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                <!-- Moon: shown in light mode → switch to dark -->
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              </button>
+              <a class="icon-link" href="https://github.com/samatild/SOSParser" target="_blank" rel="noopener noreferrer" aria-label="GitHub">
+                <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false" class="icon-svg">
+                  <path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.19 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="flash-messages">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="upload-card">
+          <form id="analyze-form" method="post" action="{{ url_for('analyze') }}" enctype="multipart/form-data">
+            <div class="form-group">
+              <label for="sosreport_file">Diagnostic File</label>
+              <div class="file-input-wrapper">
+                <input 
+                  id="sosreport_file" 
+                  name="sosreport_file" 
+                  type="file" 
+                  accept=".tar.xz,.txz,.tar.gz,.tar.bz2,.tgz,.tar" 
+                  required
+                  class="file-input">
+                <div class="file-input-display">
+                  <span class="file-icon">📦</span>
+                  <span class="file-text">Select file...</span>
+                </div>
+              </div>
+              <div class="help-text">
+                Formats: SOSReport (.tar.xz, .tar.gz, .tar.bz2, .tgz) | Supportconfig (.txz)
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="submit" class="btn-primary">Parse &amp; Analyze</button>
+            </div>
+          </form>
+
+          <div class="info-panel">
+            <p>Automated analysis of sosreport (RHEL/CentOS/Ubuntu) and supportconfig (SUSE) files with comprehensive reporting. Format is auto-detected.</p>
+          </div>
+        </div>
+      </main>
+
+      <footer class="footer">
+        <div class="container">
+          <div class="footer-content">
+            <span>&copy; 2025 SOSParser v{{ version }}</span>
+            <div class="version-checker" id="version-checker">
+              <span class="version-status" id="version-status">Checking for updates...</span>
+            </div>
+            <span>Generated: {{ execution_timestamp }} UTC</span>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <div id="upload-overlay" class="upload-overlay" style="display:none;">
+      <div class="upload-content">
+        <div class="upload-header">
+          <span class="upload-icon">📤</span>
+          <h2 id="upload-title">Uploading File</h2>
+        </div>
+        
+        <div class="upload-progress-container">
+          <div class="upload-progress-bar">
+            <div class="upload-progress-fill" id="upload-progress-fill" style="width: 0%"></div>
+          </div>
+          <div class="upload-progress-text">
+            <span id="upload-percentage">0%</span>
+            <span id="upload-speed"></span>
+          </div>
+        </div>
+        
+        <div class="upload-stats">
+          <div class="upload-stat">
+            <span class="stat-label">Uploaded</span>
+            <span class="stat-value" id="upload-bytes">0 B / 0 B</span>
+          </div>
+          <div class="upload-stat">
+            <span class="stat-label">Time Remaining</span>
+            <span class="stat-value" id="upload-eta">Calculating...</span>
+          </div>
+        </div>
+        
+        <p class="upload-status" id="upload-status">Preparing upload...</p>
+
+        <!-- SAR File Selector (shown when sar_selection response received) -->
+        <div id="sar-selector" style="display:none;">
+          <div class="sar-selector-header">
+            <h3>SAR Data Found</h3>
+            <p class="sar-selector-desc">Select the days you want to include in the analysis. Deselect all to skip SAR entirely.</p>
+          </div>
+          <div id="sar-file-list" class="sar-file-list"></div>
+          <div class="sar-perf-warning">
+            <span class="sar-perf-icon">⚠️</span>
+            <span>Each SAR day adds significant data to the report. Select only the days you need — more files will slow down browser navigation.</span>
+          </div>
+          <div class="sar-selector-actions">
+            <button type="button" class="btn-sar-secondary" id="sar-select-all">Select all</button>
+            <button type="button" class="btn-sar-secondary" id="sar-select-none">Deselect all</button>
+            <button type="button" class="btn-primary" id="sar-start-btn">Start Analysis</button>
+          </div>
+        </div>
+        <div class="console-container" id="console-container">
+          <button type="button" class="console-toggle" id="console-toggle">
+            <span class="console-toggle-icon">▶</span>
+            <span class="console-toggle-text">Show Console Output</span>
+          </button>
+          <div class="console-panel" id="console-panel">
+            <div class="console-header">
+              <span class="console-title">Console Output</span>
+              <button type="button" class="console-clear" id="console-clear" title="Clear">⌫</button>
+            </div>
+            <div class="console-output" id="console-output">
+              <div class="console-line console-info">Waiting for analysis to start...</div>
+            </div>
+          </div>
+        </div>
+        
+        <button type="button" class="btn-cancel" id="cancel-upload-btn">Cancel Upload</button>
+      </div>
+    </div>
+
+    {% if not public_mode %}
+    <div id="report-browser" class="report-browser">
+      <div class="browser-header">
+        <div>
+          <h3>Saved Reports</h3>
+          <p class="browser-subtitle">Open or delete generated reports</p>
+        </div>
+        <button class="icon-button" id="close-browser-btn" aria-label="Close">✕</button>
+      </div>
+      <div id="report-list" class="report-list">
+        <p class="browser-empty">No reports found.</p>
+      </div>
+    </div>
+    <div id="browser-backdrop" class="browser-backdrop" style="display:none;"></div>
+    {% endif %}
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+  </body>
+</html>

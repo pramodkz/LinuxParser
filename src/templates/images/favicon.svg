@@ -1,0 +1,19 @@
+<!-- SOSParser Favicon - Option 5: Simple Modern S -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="grad5" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d9ff;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#00b8d4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff9500;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="64" height="64" rx="14" fill="#050810"/>
+  
+  <!-- Modern S shape -->
+  <path d="M 38 20 C 46 20 50 24 50 30 C 50 36 46 38 38 40 C 30 42 26 44 26 48 C 26 51 28 53 32 53 C 36 53 40 51 42 48" 
+        fill="none" stroke="url(#grad5)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 26 44 C 18 44 14 40 14 34 C 14 28 18 26 26 24 C 34 22 38 20 38 16 C 38 13 36 11 32 11 C 28 11 24 13 22 16" 
+        fill="none" stroke="url(#grad5)" stroke-width="5" stroke-linecap="round"/>
+</svg>

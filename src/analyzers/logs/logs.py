@@ -1,0 +1,397 @@
+#!/usr/bin/env python3
+"""Log file analysis from sosreport"""
+
+import os
+import gzip
+import re
+from collections import deque
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
+from utils.logger import Logger
+
+
+# Byte-based log file size limits (replaces line-count truncation)
+# Full log content is now read up to a byte cap for browser virtual scrolling
+MAX_LOG_BYTES = int(os.environ.get('MAX_LOG_FILE_BYTES', str(10 * 1024 * 1024)))        # 10 MB per log file
+MAX_HISTORICAL_LOG_BYTES = int(os.environ.get('MAX_HISTORICAL_LOG_BYTES', str(5 * 1024 * 1024)))  # 5 MB per historical file
+
+
+class LogAnalyzer:
+    """Analyze system logs from sosreport"""
+    
+    def analyze_system_logs(self, base_path: Path) -> dict:
+        """Analyze system logs (messages, syslog, or journalctl as fallback)"""
+        Logger.debug("Analyzing system logs")
+        
+        data = {}
+        log_dir = base_path / 'var' / 'log'
+        
+        # messages - with fallback to rotated/gzipped files
+        messages = log_dir / 'messages'
+        messages_content, messages_source = self._read_log_with_fallback(messages, 'messages', log_dir)
+        if messages_content:
+            data['messages'] = messages_content
+            if messages_source != 'messages':
+                data['messages_source'] = messages_source
+        
+        # Get historical messages files
+        historical_messages = self._get_historical_logs(log_dir, 'messages')
+        if historical_messages:
+            data['messages_historical'] = historical_messages
+        
+        # syslog - with fallback to rotated/gzipped files
+        syslog = log_dir / 'syslog'
+        syslog_content, syslog_source = self._read_log_with_fallback(syslog, 'syslog', log_dir)
+        if syslog_content:
+            data['syslog'] = syslog_content
+            if syslog_source != 'syslog':
+                data['syslog_source'] = syslog_source
+        
+        # Get historical syslog files
+        historical_syslog = self._get_historical_logs(log_dir, 'syslog')
+        if historical_syslog:
+            data['syslog_historical'] = historical_syslog
+        
+        # Boot log
+        boot_log = log_dir / 'boot.log'
+        if boot_log.exists():
+            data['boot_log'] = self._read_log_file(boot_log)
+        
+        # CRITICAL: If no traditional logs found (Debian/Ubuntu case), use journalctl as fallback
+        has_traditional_logs = bool(messages_content or syslog_content)
+        if not has_traditional_logs:
+            Logger.info("No traditional logs found, using journalctl as primary system log source")
+            journalctl_data = self.analyze_journalctl_logs(base_path)
+            if journalctl_data:
+                data['journalctl'] = journalctl_data
+                data['using_journalctl_fallback'] = True
+        
+        return data
+    
+    def _read_log_with_fallback(self, primary_file: Path, base_name: str, log_dir: Path) -> Tuple[Optional[str], str]:
+        """
+        Read a log file with fallback to rotated/gzipped versions.
+        Returns tuple of (content, source_filename).
+        """
+        # Try primary file first
+        if primary_file.exists():
+            content = self._read_log_file(primary_file)
+            if content and content.strip():
+                return content, base_name
+        
+        # Find rotated files and sort by date (newest first)
+        rotated_files = self._find_rotated_files(log_dir, base_name)
+        
+        for rotated_file in rotated_files:
+            content = self._read_file_auto(rotated_file)
+            if content and content.strip():
+                return content, rotated_file.name
+        
+        return None, ''
+    
+    def _find_rotated_files(self, log_dir: Path, base_name: str) -> List[Path]:
+        """
+        Find rotated log files matching the base name, sorted by date (newest first).
+        Matches: messages.1, messages-20250713.gz, messages.1.gz, etc.
+        """
+        if not log_dir.exists():
+            return []
+        
+        rotated = []
+        pattern = re.compile(rf'^{re.escape(base_name)}[-.][\d-]+(?:\.gz)?$')
+        
+        for f in log_dir.iterdir():
+            if f.is_file() and pattern.match(f.name):
+                rotated.append(f)
+        
+        # Sort by modification time (newest first) or by name (which often includes date)
+        rotated.sort(key=lambda x: x.name, reverse=True)
+        
+        return rotated
+    
+    def _get_historical_logs(self, log_dir: Path, base_name: str) -> List[Dict[str, str]]:
+        """
+        Get list of historical log files with metadata.
+        Returns list of dicts with filename and full content (byte-capped).
+        """
+        rotated_files = self._find_rotated_files(log_dir, base_name)
+        
+        historical = []
+        for f in rotated_files[:5]:  # Limit to 5 most recent historical files
+            content = self._read_file_auto(f, MAX_HISTORICAL_LOG_BYTES)
+            if content and content.strip():
+                # Extract date from filename if possible
+                date_match = re.search(r'(\d{8})', f.name)
+                date_str = date_match.group(1) if date_match else ''
+                if date_str:
+                    # Format as YYYY-MM-DD
+                    date_str = f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
+                
+                historical.append({
+                    'filename': f.name,
+                    'date': date_str,
+                    'content': content,
+                    'is_gzipped': f.suffix == '.gz'
+                })
+        
+        return historical
+    
+    def _read_file_auto(self, file_path: Path, max_bytes: int = None) -> Optional[str]:
+        """
+        Read a file, automatically handling gzip compression.
+        """
+        if max_bytes is None:
+            max_bytes = MAX_LOG_BYTES
+        
+        try:
+            if file_path.suffix == '.gz':
+                return self._read_gzip_file(file_path, max_bytes)
+            else:
+                return self._read_log_file(file_path, max_bytes)
+        except Exception as e:
+            Logger.warning(f"Failed to read {file_path}: {e}")
+            return None
+    
+    def _read_gzip_file(self, file_path: Path, max_bytes: int = None) -> str:
+        """Read a gzipped log file with byte-based safety cap.
+        
+        Streams through the decompressed content using a sliding window
+        to stay within the byte cap while remaining memory-efficient.
+        """
+        if max_bytes is None:
+            max_bytes = MAX_LOG_BYTES
+        try:
+            result_lines = deque()
+            total_bytes = 0
+            kept_bytes = 0
+            truncated = False
+            
+            with gzip.open(file_path, 'rt', encoding='utf-8', errors='ignore') as f:
+                for line in f:
+                    line_len = len(line)
+                    total_bytes += line_len
+                    result_lines.append(line)
+                    kept_bytes += line_len
+                    
+                    # Trim from front if we exceed the byte cap
+                    while kept_bytes > max_bytes and result_lines:
+                        removed = result_lines.popleft()
+                        kept_bytes -= len(removed)
+                        truncated = True
+            
+            content = ''.join(result_lines)
+            if truncated:
+                total_mb = total_bytes / (1024 * 1024)
+                cap_mb = max_bytes / (1024 * 1024)
+                return f"[... Compressed file truncated: showing last {cap_mb:.0f}MB of {total_mb:.1f}MB decompressed ...]\n{content}"
+            return content
+        except Exception as e:
+            Logger.warning(f"Failed to read gzipped file {file_path}: {e}")
+            return f"Error reading gzipped file: {e}"
+    
+    def analyze_kernel_logs(self, base_path: Path) -> dict:
+        """Analyze kernel logs"""
+        Logger.debug("Analyzing kernel logs")
+        
+        data = {}
+        
+        # dmesg
+        dmesg = base_path / 'sos_commands' / 'kernel' / 'dmesg'
+        if not dmesg.exists():
+            dmesg = base_path / 'var' / 'log' / 'dmesg'
+        if dmesg.exists():
+            data['dmesg'] = self._read_log_file(dmesg)
+        
+        # kern.log
+        kern_log = base_path / 'var' / 'log' / 'kern.log'
+        if kern_log.exists():
+            data['kern_log'] = self._read_log_file(kern_log)
+        
+        return data
+    
+    def analyze_auth_logs(self, base_path: Path) -> dict:
+        """Analyze authentication logs"""
+        Logger.debug("Analyzing authentication logs")
+        
+        data = {}
+        
+        # secure
+        secure = base_path / 'var' / 'log' / 'secure'
+        if secure.exists():
+            data['secure'] = self._read_log_file(secure)
+        
+        # auth.log
+        auth_log = base_path / 'var' / 'log' / 'auth.log'
+        if auth_log.exists():
+            data['auth_log'] = self._read_log_file(auth_log)
+        
+        # audit log
+        audit_log = base_path / 'var' / 'log' / 'audit' / 'audit.log'
+        if audit_log.exists():
+            data['audit_log'] = self._read_log_file(audit_log)
+        
+        # lastlog
+        lastlog = base_path / 'sos_commands' / 'login' / 'lastlog_-t_999999'
+        if not lastlog.exists():
+            lastlog = base_path / 'sos_commands' / 'login' / 'lastlog'
+        if lastlog.exists():
+            data['lastlog'] = lastlog.read_text()
+        
+        return data
+    
+    def analyze_journalctl_logs(self, base_path: Path) -> dict:
+        """
+        Discover and analyze all journalctl logs from sos_commands/logs/.
+        This is critical for Debian-based systems that don't have /var/log/messages or /var/log/syslog.
+        """
+        Logger.debug("Analyzing journalctl logs")
+        
+        data = {}
+        
+        # Check common locations for journalctl outputs
+        logs_dirs = [
+            base_path / 'sos_commands' / 'logs',
+            base_path / 'sos_commands' / 'systemd',
+        ]
+        
+        journalctl_files = {}
+        
+        for logs_dir in logs_dirs:
+            if not logs_dir.exists():
+                continue
+            
+            # Find all journalctl files
+            for file_path in logs_dir.iterdir():
+                if file_path.is_file() and file_path.name.startswith('journalctl'):
+                    # Parse the journalctl file name to determine its type
+                    filename = file_path.name
+                    
+                    # Skip disk-usage as it's not a log file
+                    if 'disk-usage' in filename or 'disk_usage' in filename:
+                        continue
+                    
+                    # Skip list-boots as it's shown in Boot & GRUB section
+                    if 'list-boots' in filename or 'list_boots' in filename:
+                        continue
+                    
+                    # Categorize by filename
+                    if filename not in journalctl_files:
+                        journalctl_files[filename] = file_path
+        
+        # Sort files for consistent ordering (current boot first, then previous boots)
+        sorted_files = sorted(journalctl_files.items(), key=lambda x: (
+            '_-1' in x[0],  # Previous boot last
+            '_-2' in x[0],  # Older boots even later
+            x[0]  # Alphabetical within same priority
+        ))
+        
+        # Process each journalctl file
+        for filename, file_path in sorted_files:
+            try:
+                content = self._read_log_file(file_path)
+                if content and content.strip():
+                    # Create a friendly key
+                    key = filename.replace('journalctl_', '').replace('--', '').replace('_', ' ').strip()
+                    if not key:
+                        key = 'default'
+                    
+                    # Clean up the key for better display
+                    key = key.replace('no-pager', '').strip()
+                    if key.startswith('boot'):
+                        if '-1' in key:
+                            key = 'previous_boot'
+                        elif '-2' in key:
+                            key = 'boot_minus_2'
+                        else:
+                            key = 'current_boot'
+                    elif not key:
+                        key = 'full_journal'
+                    
+                    data[key] = {
+                        'content': content,
+                        'filename': filename,
+                        'description': self._get_journalctl_description(filename)
+                    }
+            except Exception as e:
+                Logger.warning(f"Failed to read journalctl file {filename}: {e}")
+        
+        return data
+    
+    def _get_journalctl_description(self, filename: str) -> str:
+        """Generate a human-readable description for a journalctl file."""
+        if '--list-boots' in filename or 'list_boots' in filename or 'list-boots' in filename:
+            return "Boot History (List Boots)"
+        elif '--boot' in filename:
+            if '_-1' in filename:
+                return "Journal from previous boot"
+            elif '_-2' in filename:
+                return "Journal from 2 boots ago"
+            else:
+                return "Journal from current boot"
+        elif '--no-pager' in filename and '--boot' not in filename:
+            return "Complete system journal"
+        else:
+            return "System journal"
+    
+    def analyze_service_logs(self, base_path: Path) -> dict:
+        """Analyze service-specific logs"""
+        Logger.debug("Analyzing service logs")
+        
+        data = {}
+        
+        # Journal log - primary importance (kept for backwards compatibility)
+        journal = base_path / 'sos_commands' / 'logs' / 'journalctl_--no-pager'
+        if not journal.exists():
+            journal = base_path / 'sos_commands' / 'systemd' / 'journalctl_--no-pager_--boot'
+        if journal.exists():
+            data['journal'] = self._read_log_file(journal)
+        
+        # Cron log
+        cron = base_path / 'var' / 'log' / 'cron'
+        if cron.exists():
+            data['cron'] = self._read_log_file(cron)
+        
+        # Mail log
+        maillog = base_path / 'var' / 'log' / 'maillog'
+        if maillog.exists():
+            data['maillog'] = self._read_log_file(maillog)
+        
+        # YUM/DNF log
+        yum_log = base_path / 'var' / 'log' / 'yum.log'
+        if yum_log.exists():
+            data['yum_log'] = self._read_log_file(yum_log)
+        
+        dnf_log = base_path / 'var' / 'log' / 'dnf.log'
+        if dnf_log.exists():
+            data['dnf_log'] = self._read_log_file(dnf_log)
+        
+        return data
+    
+    def _read_log_file(self, file_path: Path, max_bytes: int = None) -> str:
+        """Read entire log file with byte-based safety cap.
+        
+        Reads the full file content for complete log visibility. For files
+        exceeding max_bytes, reads from the end and prepends a truncation notice.
+        """
+        if max_bytes is None:
+            max_bytes = MAX_LOG_BYTES
+        try:
+            file_size = file_path.stat().st_size
+            
+            if file_size <= max_bytes:
+                # Read entire file
+                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+                    return f.read()
+            
+            # File exceeds cap — read last max_bytes from end
+            with open(file_path, 'rb') as f:
+                f.seek(file_size - max_bytes)
+                f.readline()  # Skip partial first line
+                content = f.read().decode('utf-8', errors='ignore')
+            
+            total_mb = file_size / (1024 * 1024)
+            cap_mb = max_bytes / (1024 * 1024)
+            return f"[... File truncated: showing last {cap_mb:.0f}MB of {total_mb:.1f}MB total ...]\n{content}"
+        except Exception as e:
+            Logger.warning(f"Failed to read {file_path}: {e}")
+            return f"Error reading file: {e}"
