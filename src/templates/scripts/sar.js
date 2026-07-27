@@ -1,5 +1,6 @@
 // SAR (System Activity Reporter) Viewer
 // Dynamic graph visualization with navigation and plot selector
+// Features: 80% threshold indicators for resource utilization metrics
 
 // Check if Chart.js is available
 if (typeof Chart === 'undefined') {
@@ -13,6 +14,7 @@ class SarViewer {
         this.currentDayIndex = 0;
         this.currentPlot = 'cpu';
         this.chart = null;
+        this.THRESHOLD_PERCENTAGE = 80; // 80% threshold for resource utilization
         
         if (!this.container || !this.sarData || !this.sarData.available) {
             console.error('SAR viewer: Invalid container or data');
@@ -281,12 +283,64 @@ class SarViewer {
         canvas.parentElement.appendChild(msg);
     }
     
+    /**
+     * Create a Chart.js plugin that draws a horizontal threshold line
+     * @param {number} threshold - The threshold value (e.g., 80 for percentages or absolute value)
+     * @param {string} label - Label for the threshold line
+     * @param {object} options - Additional options: { color, strokeStyle, dashPattern }
+     * @returns {object} Chart.js plugin
+     */
+    createThresholdPlugin(threshold, label, options = {}) {
+        const strokeColor = options.color || 'rgba(255, 99, 132, 0.5)';
+        const lineWidth = options.lineWidth || 2;
+        const dashPattern = options.dashPattern || [5, 5];
+        const textColor = options.textColor || 'rgba(255, 99, 132, 0.8)';
+        
+        return {
+            id: 'thresholdLine',
+            afterDatasetsDraw(chart) {
+                const {ctx, chartArea: {left, top, width, height}, scales: {y}} = chart;
+                
+                if (!y) return; // No Y scale, skip
+                
+                // Calculate the Y position for the threshold
+                const thresholdY = y.getPixelForValue(threshold);
+                
+                // Only draw if threshold is within visible area
+                if (isNaN(thresholdY) || thresholdY < top || thresholdY > top + height) {
+                    return;
+                }
+                
+                // Draw line
+                ctx.save();
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = lineWidth;
+                ctx.setLineDash(dashPattern);
+                ctx.beginPath();
+                ctx.moveTo(left, thresholdY);
+                ctx.lineTo(left + width, thresholdY);
+                ctx.stroke();
+                ctx.restore();
+                
+                // Draw label
+                ctx.save();
+                ctx.fillStyle = textColor;
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'bottom';
+                ctx.fillText(label, left + 5, thresholdY - 5);
+                ctx.restore();
+            }
+        };
+    }
+    
     getChartConfig(title, yAxisLabel, datasets, labels, options = {}) {
         // Include date in title if available
         const fullTitle = this.currentDateDisplay ? 
             `${title} - ${this.currentDateDisplay}` : title;
         
-        return {
+        // Build the configuration
+        const config = {
             type: 'line',
             data: {
                 labels: labels,
@@ -336,8 +390,25 @@ class SarViewer {
                 ...options.chartOptions
             }
         };
+        
+        // Add threshold plugin if requested (for percentage-based metrics)
+        if (options.showThreshold && options.max === 100) {
+            const thresholdLabel = `${this.THRESHOLD_PERCENTAGE}% Threshold`;
+            config.plugins = [this.createThresholdPlugin(this.THRESHOLD_PERCENTAGE, thresholdLabel)];
+        } else if (options.threshold !== undefined) {
+            // Absolute value threshold with custom options
+            const thresholdLabel = options.thresholdLabel || `Threshold: ${options.threshold.toFixed(1)}`;
+            const pluginOptions = {
+                color: options.thresholdColor || 'rgba(255, 99, 132, 0.5)',
+                lineWidth: options.thresholdLineWidth || 2,
+                dashPattern: options.thresholdDash || [5, 5],
+                textColor: options.thresholdTextColor || 'rgba(255, 99, 132, 0.8)'
+            };
+            config.plugins = [this.createThresholdPlugin(options.threshold, thresholdLabel, pluginOptions)];
+        }
+        
+        return config;
     }
-    
     // Color palette for charts
     colors = {
         primary: { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.2)' },
@@ -415,7 +486,7 @@ class SarViewer {
             }
         ];
         
-        const config = this.getChartConfig('CPU Utilization Over Time', 'Percentage (%)', datasets, labels, { max: 100 });
+        const config = this.getChartConfig('CPU Utilization Over Time', 'Percentage (%)', datasets, labels, { max: 100, showThreshold: true });
         const ctx = canvas.getContext('2d');
         this.chart = new Chart(ctx, config);
     }
@@ -468,7 +539,7 @@ class SarViewer {
             'Utilization (%)', 
             datasets, 
             labels, 
-            { max: 100 }
+            { max: 100, showThreshold: true }
         );
         const ctx = canvas.getContext('2d');
         this.chart = new Chart(ctx, config);
@@ -687,7 +758,7 @@ class SarViewer {
             }
         ];
         
-        const config = this.getChartConfig('Memory Utilization', 'Percentage (%)', datasets, labels, { max: 100 });
+        const config = this.getChartConfig('Memory Utilization', 'Percentage (%)', datasets, labels, { max: 100, showThreshold: true });
         const ctx = canvas.getContext('2d');
         this.chart = new Chart(ctx, config);
     }
@@ -717,7 +788,7 @@ class SarViewer {
             }
         ];
         
-        const config = this.getChartConfig('Swap Utilization', 'Percentage (%)', datasets, labels, { max: 100 });
+        const config = this.getChartConfig('Swap Utilization', 'Percentage (%)', datasets, labels, { max: 100, showThreshold: true });
         const ctx = canvas.getContext('2d');
         this.chart = new Chart(ctx, config);
     }
@@ -770,7 +841,7 @@ class SarViewer {
             }
         ];
         
-        const config = this.getChartConfig('Hugepages Utilization', 'Percentage (%)', datasets, labels, { max: 100 });
+        const config = this.getChartConfig('Hugepages Utilization', 'Percentage (%)', datasets, labels, { max: 100, showThreshold: true });
         const ctx = canvas.getContext('2d');
         this.chart = new Chart(ctx, config);
     }
@@ -948,7 +1019,7 @@ class SarViewer {
             };
         });
         
-        const config = this.getChartConfig('Block Device Utilization', 'Utilization (%)', datasets, allTimes, { max: 100 });
+        const config = this.getChartConfig('Block Device Utilization', 'Utilization (%)', datasets, allTimes, { max: 100, showThreshold: true });
         const ctx = canvas.getContext('2d');
         this.chart = new Chart(ctx, config);
     }
@@ -1027,6 +1098,23 @@ class SarViewer {
         });
         
         const labels = Object.keys(timeGroups).sort();
+        
+        // Calculate all error values to find max for threshold
+        const allErrorValues = [];
+        labels.forEach(t => {
+            allErrorValues.push(
+                timeGroups[t].rxerr,
+                timeGroups[t].txerr,
+                timeGroups[t].coll,
+                timeGroups[t].rxdrop,
+                timeGroups[t].txdrop
+            );
+        });
+        
+        // Calculate 30% of maximum error value as threshold
+        const maxErrorValue = Math.max(...allErrorValues);
+        const errorThreshold = maxErrorValue > 0 ? (maxErrorValue * 0.30) : 0;
+        
         const datasets = [
             {
                 label: 'RX Errors/s',
@@ -1065,7 +1153,12 @@ class SarViewer {
             }
         ];
         
-        const config = this.getChartConfig('Network Errors & Drops', 'Errors/s', datasets, labels);
+        const config = this.getChartConfig('Network Errors & Drops', 'Errors/s', datasets, labels, { 
+            threshold: errorThreshold,
+            thresholdLabel: `30% of Max (${errorThreshold.toFixed(2)} errors/s)`,
+            thresholdColor: 'rgba(255, 165, 0, 0.5)',
+            thresholdTextColor: 'rgba(255, 165, 0, 0.8)'
+        });
         const ctx = canvas.getContext('2d');
         this.chart = new Chart(ctx, config);
     }
