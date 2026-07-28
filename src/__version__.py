@@ -1,4 +1,4 @@
-"""Version information for SOSParser."""
+"""Version information for LinuxParser."""
 
 import os
 from pathlib import Path

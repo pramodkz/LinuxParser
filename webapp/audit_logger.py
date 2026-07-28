@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Audit logging module for SOSParser webapp.
+Audit logging module for LinuxParser webapp.
 Logs security and usage events when running in PUBLIC_MODE.
 """
 
@@ -26,7 +26,7 @@ class AuditLogger:
     
     def _setup_logger(self) -> logging.Logger:
         """Configure structured audit logger that writes to stdout."""
-        logger = logging.getLogger("sosparser.audit")
+        logger = logging.getLogger("linuxparser.audit")
         logger.setLevel(logging.INFO)
         logger.propagate = False
         

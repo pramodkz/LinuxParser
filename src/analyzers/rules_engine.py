@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Rules Engine for SOSParser
+Rules Engine for LinuxParser
 
 Loads known-issue rule collections from JSON files and evaluates them
 against extracted diagnostic bundles (sosreport or supportconfig).

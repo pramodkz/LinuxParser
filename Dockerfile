@@ -1,4 +1,4 @@
-# SOSParser - Docker Image
+# LinuxParser - Docker Image
 # Based on official Python slim image for better compatibility
 
 FROM python:3.12-slim
@@ -9,7 +9,7 @@ ARG BUILD_DATE
 ARG VCS_REF
 
 # Labels
-LABEL org.opencontainers.image.title="SOSParser"
+LABEL org.opencontainers.image.title="LinuxParser"
 LABEL org.opencontainers.image.description="Linux sosreport/supportconfig analyzer"
 LABEL org.opencontainers.image.version="${VERSION}"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"

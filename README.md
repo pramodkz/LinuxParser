@@ -1,21 +1,21 @@
-# RHELSOSParser
+# linuxparser
 
 
 A web application for automated analysis of Linux sosreport/supportconfig diagnostic files.
 
 A comprehensive diagnostic analysis tool for Linux systems.
 
-<img src="rhelsosparserdemo-README.gif" alt="RHELSOSParser Demo" width="800" />
+<img src="linuxparserdemo-README.gif" alt="linuxparser Demo" width="800" />
 
-You can deploy the container and self-host RHELSOSParser in your own environment for diagnostic analysis and reporting.
+You can deploy the container and self-host linuxparser in your own environment for diagnostic analysis and reporting.
 ## How to run
 ### Docker (Recommended)
 
-The easiest way to run RHELSOSParser is using Docker:
+The easiest way to run linuxparser is using Docker:
 
 ```bash
-docker pull rhelsosparser:latest
-docker run -d -p 8000:8000 --name rhelsosparser rhelsosparser:latest
+docker pull linuxparser:latest
+docker run -d -p 8000:8000 --name linuxparser linuxparser:latest
 ```
 
 Then open http://localhost:8000 in your browser.
@@ -23,18 +23,18 @@ Then open http://localhost:8000 in your browser.
 #### Persisting uploads and reports
 - Bind mounts (recommended):
   ```bash
-  docker run -d -p 8000:8000 --name rhelsosparser \
+  docker run -d -p 8000:8000 --name linuxparser \
     -v $(pwd)/data/uploads:/app/webapp/uploads \
     -v $(pwd)/data/outputs:/app/webapp/outputs \
-    rhelsosparser:latest
+    linuxparser:latest
   ```
   Reports live in `/app/webapp/outputs/<token>/report.html` and stay on disk.
 - Named volumes:
   ```bash
-  docker run -d -p 8000:8000 --name rhelsosparser \
-    -v rhelsosparser_uploads:/app/webapp/uploads \
-    -v rhelsosparser_outputs:/app/webapp/outputs \
-    rhelsosparser:latest
+  docker run -d -p 8000:8000 --name linuxparser \
+    -v linuxparser_uploads:/app/webapp/uploads \
+    -v linuxparser_outputs:/app/webapp/outputs \
+    linuxparser:latest
   ```
 - If you do **not** specify mounts, Docker will create anonymous volumes (due to `VOLUME` in the image); data persists for that container, but new containers won’t reuse it unless you reattach the volume ID.
 
@@ -45,9 +45,9 @@ Then open http://localhost:8000 in your browser.
 For public-facing deployments where you don't want to store any user data, enable **Public Mode**:
 
 ```bash
-docker run -d -p 8000:8000 --name rhelsosparser \
+docker run -d -p 8000:8000 --name linuxparser \
   -e PUBLIC_MODE=true \
-  rhelsosparser:latest
+  linuxparser:latest
 ```
 
 In Public Mode:
@@ -61,7 +61,7 @@ This is ideal for demo instances or public services where privacy is a concern.
 
 #### Audit Logging (Public Mode)
 
-When running in Public Mode, RHELSOSParser automatically enables comprehensive **audit logging** to monitor and track all user activities. Audit logs are written to stdout in JSON format and can be easily collected by container logging solutions.
+When running in Public Mode, linuxparser automatically enables comprehensive **audit logging** to monitor and track all user activities. Audit logs are written to stdout in JSON format and can be easily collected by container logging solutions.
 
 **What is logged:**
 - All page access (HTTP requests with IP, User-Agent, method, status)
@@ -76,18 +76,18 @@ When running in Public Mode, RHELSOSParser automatically enables comprehensive *
 docker-compose -f docker-compose.public.yml up -d
 
 # View audit logs in real-time
-docker-compose -f docker-compose.public.yml logs -f rhelsosparser-public | grep "AUDIT"
+docker-compose -f docker-compose.public.yml logs -f linuxparser-public | grep "AUDIT"
 
 # Export audit logs to a file
-docker-compose logs rhelsosparser | grep "AUDIT" > audit.log
+docker-compose logs linuxparser | grep "AUDIT" > audit.log
 ```
 
 #### Private Mode (Default)
 
-By default, RHELSOSParser runs in **Private Mode** where reports are saved and can be browsed:
+By default, linuxparser runs in **Private Mode** where reports are saved and can be browsed:
 
 ```bash
-docker run -d -p 8000:8000 --name rhelsosparser rhelsosparser:latest
+docker run -d -p 8000:8000 --name linuxparser linuxparser:latest
 ```
 
 In Private Mode:
@@ -97,18 +97,18 @@ In Private Mode:
 
 ### Update
 
-To update to the latest version of RHELSOSParser:
+To update to the latest version of linuxparser:
 
 ```bash
 # Stop and remove the current container
-docker stop rhelsosparser
-docker rm rhelsosparser
+docker stop linuxparser
+docker rm linuxparser
 
 # Pull the latest image
-docker pull rhelsosparser:latest
+docker pull linuxparser:latest
 
 # Start a new container with the same settings
-docker run -d -p 8000:8000 --name rhelsosparser rhelsosparser:latest
+docker run -d -p 8000:8000 --name linuxparser linuxparser:latest
 
 # Or if using docker-compose
 docker-compose pull
@@ -120,7 +120,7 @@ docker-compose up -d
 
 #### Configuring Log Line Limits
 
-By default, RHELSOSParser reads the last **1000 lines** from each log file. You can adjust this via environment variables:
+By default, linuxparser reads the last **1000 lines** from each log file. You can adjust this via environment variables:
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -131,10 +131,10 @@ By default, RHELSOSParser reads the last **1000 lines** from each log file. You 
 Example with increased limits:
 
 ```bash
-docker run -d -p 8000:8000 --name rhelsosparser \
+docker run -d -p 8000:8000 --name linuxparser \
   -e LOG_LINES_PRIMARY=2000 \
   -e LOG_LINES_SECONDARY=1000 \
-  rhelsosparser:latest
+  linuxparser:latest
 ```
 
 > **Note**: For browser performance, we recommend keeping limits under 5000 lines. Higher values may cause slower rendering on older devices.
@@ -181,7 +181,7 @@ curl -F "file=@/path/to/sosreport.tar.xz" http://localhost:8000/upload
 
 ## Processing Capabilities
 
-RHELSOSParser analyzes comprehensive system information from diagnostic reports. For a detailed breakdown of what is currently processed and what features are planned, see [`checklist.md`](checklist.md).
+linuxparser analyzes comprehensive system information from diagnostic reports. For a detailed breakdown of what is currently processed and what features are planned, see [`checklist.md`](checklist.md).
 
 ### Currently Processed
 - **System Information**: Hardware, OS, kernel, CPU, memory, disk details
@@ -203,9 +203,9 @@ RHELSOSParser analyzes comprehensive system information from diagnostic reports.
 
 ```bash
 git clone <your-repo-url>
-cd rhelsosparser
-docker build -t rhelsosparser:local .
-docker run -d -p 8000:8000 rhelsosparser:local
+cd linuxparser
+docker build -t linuxparser:local .
+docker run -d -p 8000:8000 linuxparser:local
 ```
 
 ### Or use the build script
@@ -223,7 +223,7 @@ Available image tags:
 
 ## Contributing
 
-We welcome contributions to `rhelsosparser`! To help us maintain a high-quality codebase, please review and follow these guidelines:
+We welcome contributions to `linuxparser`! To help us maintain a high-quality codebase, please review and follow these guidelines:
 
 ### How to Contribute
 
@@ -273,4 +273,4 @@ If you encounter bugs, have questions, or want to suggest an enhancement:
    Clearly describe the use case and the benefit for others.
 
 
-Thank you for helping improve `rhelsosparser`!
+Thank you for helping improve `linuxparser`!

@@ -1,5 +1,5 @@
 /**
- * SOSParser Web Application
+ * LinuxParser Web Application
  * Main JavaScript for upload interface, chunked uploads, and version checking
  */
 
@@ -563,7 +563,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const current = document.documentElement.getAttribute('data-theme');
       const next = current === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', next);
-      try { localStorage.setItem('sosparser-theme', next); } catch (e) {}
+      try { localStorage.setItem('linuxparser-theme', next); } catch (e) {}
     });
   }
 });

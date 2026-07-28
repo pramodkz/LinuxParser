@@ -320,7 +320,7 @@ def create_app() -> Flask:
     )
 
     # Basic config
-    app.config["SECRET_KEY"] = os.environ.get("WEBAPP_SECRET_KEY", "sosparser-dev-key")
+    app.config["SECRET_KEY"] = os.environ.get("WEBAPP_SECRET_KEY", "linuxparser-dev-key")
     # Public mode: no report storage, no saved reports browser
     public_mode = os.environ.get("PUBLIC_MODE", "false").lower() in ("true", "1", "yes")
     app.config["PUBLIC_MODE"] = public_mode

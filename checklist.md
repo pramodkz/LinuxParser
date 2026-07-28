@@ -1,4 +1,4 @@
-# SOSParser Processing Checklist
+# LinuxParser Processing Checklist
 
 ## Table of Contents
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 # 
-# Audit Log Helper Script for SOSParser
+# Audit Log Helper Script for LinuxParser
 # Provides convenient commands for viewing and analyzing audit logs
 #
 # Usage: ./view-audit-logs.sh [command] [options]
@@ -10,7 +10,7 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
-SERVICE_NAME="${SERVICE_NAME:-sosparser}"
+SERVICE_NAME="${SERVICE_NAME:-linuxparser}"
 USE_DOCKER_DIRECT="${USE_DOCKER_DIRECT:-auto}"  # auto, true, or false
 
 # Colors for output
@@ -73,7 +73,7 @@ detect_container_mode() {
 # Show usage
 show_usage() {
     cat << EOF
-Audit Log Helper Script for SOSParser
+Audit Log Helper Script for LinuxParser
 
 Works with both docker-compose and direct docker run containers.
 
@@ -92,11 +92,11 @@ Commands:
 
 Options:
     -f FILE         Use specific docker-compose file (default: docker-compose.yml)
-    -s SERVICE      Use specific service name (default: sosparser)
+    -s SERVICE      Use specific service name (default: linuxparser)
 
 Environment Variables:
     COMPOSE_FILE      Docker compose file to use
-    SERVICE_NAME      Service/container name (default: sosparser)
+    SERVICE_NAME      Service/container name (default: linuxparser)
     USE_DOCKER_DIRECT Set to 'true' to force direct docker, 'false' for compose (default: auto)
 
 Examples:

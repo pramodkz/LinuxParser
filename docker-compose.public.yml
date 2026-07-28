@@ -5,9 +5,9 @@ version: '3.8'
 # Suitable for public-facing deployments where security monitoring is required
 
 services:
-  sosparser-public:
+  linuxparser-public:
     build: .
-    container_name: sosparser-public
+    container_name: linuxparser-public
     ports:
       - "8000:8000"
     # Gunicorn config:
@@ -32,8 +32,8 @@ services:
     # In public mode, volumes are optional since data is not persisted
     # You may still want to mount volumes for temporary storage performance
     # volumes:
-    #   - /tmp/sosparser/uploads:/app/webapp/uploads
-    #   - /tmp/sosparser/outputs:/app/webapp/outputs
+    #   - /tmp/linuxparser/uploads:/app/webapp/uploads
+    #   - /tmp/linuxparser/outputs:/app/webapp/outputs
     environment:
       - WEBAPP_HOST=0.0.0.0
       - WEBAPP_PORT=8000
@@ -59,13 +59,13 @@ services:
         # For production, consider using a logging driver like:        # driver: "syslog"
         # options:
         #   syslog-address: "udp://your-log-server:514"
-        #   tag: "sosparser-audit"
+        #   tag: "linuxparser-audit"
         # OR use Docker's built-in forwarding to cloud logging services
         # driver: "awslogs"  # For AWS CloudWatch
         # driver: "gcplogs"  # For Google Cloud Logging
         # driver: "fluentd"  # For Fluentd log aggregation
 
 # Example: Viewing audit logs
-# To view live audit logs: docker-compose -f docker-compose.public.yml logs -f sosparser-public
-# To filter for audit events: docker-compose -f docker-compose.public.yml logs sosparser-public | grep "AUDIT"
-# To export logs: docker-compose -f docker-compose.public.yml logs sosparser-public > audit.log
+# To view live audit logs: docker-compose -f docker-compose.public.yml logs -f linuxparser-public
+# To filter for audit events: docker-compose -f docker-compose.public.yml logs linuxparser-public | grep "AUDIT"
+# To export logs: docker-compose -f docker-compose.public.yml logs linuxparser-public > audit.log

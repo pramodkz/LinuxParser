@@ -1,5 +1,5 @@
 /**
- * SOSParser Advanced Log Viewer
+ * LinuxParser Advanced Log Viewer
  * Interactive log viewer with virtual scrolling, search, filters, and highlighting.
  *
  * Virtual scrolling renders only visible lines (~50 DOM elements) regardless of
@@ -477,7 +477,7 @@ class LogViewer {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `sosparser-logs-${Date.now()}.txt`;
+        a.download = `linuxparser-logs-${Date.now()}.txt`;
         a.click();
         URL.revokeObjectURL(url);
     }

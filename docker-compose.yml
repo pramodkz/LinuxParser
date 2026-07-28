@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  sosparser:
+  linuxparser:
     build: .
-    container_name: sosparser
+    container_name: linuxparser
     ports:
       - "8000:8000"
     # Gunicorn config:

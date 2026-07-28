@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SOSParser Report - {{ summary.hostname }}</title>
+    <title>LinuxParser Report - {{ summary.hostname }}</title>
     <!-- Apply saved theme before first paint to avoid flash -->
-    <script>try{var t=localStorage.getItem('sosparser-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
+    <script>try{var t=localStorage.getItem('linuxparser-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}</script>
     <link rel="stylesheet" href="styles/main.css">
     <link rel="stylesheet" href="styles/logviewer.css">
     <link rel="stylesheet" href="styles/sar.css">
@@ -20,12 +20,12 @@
                 <div class="header-left">
                     <a href="/" class="logo-link">
                         <div class="logo">
-                            <img src="images/db.png" alt="RHELSOSParser Logo">
+                            <img src="images/db.png" alt="linuxparser Logo">
                         </div>
                     </a>
                     <div class="header-title">
                         <a href="/" class="title-link">
-                            <h1>SOSParser Report</h1>
+                            <h1>LinuxParser Report</h1>
                         </a>
                         <div class="header-info">
                             <div class="info-item">
@@ -3381,7 +3381,7 @@
         </main>
 
         <footer class="report-footer">
-            <p>SOSParser v{{ version }} | Generated: {{ execution_timestamp }} UTC</p>
+            <p>LinuxParser v{{ version }} | Generated: {{ execution_timestamp }} UTC</p>
         </footer>
     </div>
 

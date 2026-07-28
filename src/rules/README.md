@@ -1,6 +1,6 @@
-# SOSParser Rules Engine – Known Issues
+# LinuxParser Rules Engine – Known Issues
 
-This directory contains JSON rule collections used by the SOSParser rules engine
+This directory contains JSON rule collections used by the LinuxParser rules engine
 to detect known issues in sosreport and supportconfig diagnostic bundles.
 
 ## How it works

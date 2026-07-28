@@ -78,11 +78,11 @@ class SOSReportAnalyzer:
             tarball_name = tarball_name.split('.tar')[0]
         
         if self.output_dir_override:
-            self.output_dir = self.output_dir_override / f"SOSParser_{tarball_name}"
+            self.output_dir = self.output_dir_override / f"LinuxParser_{tarball_name}"
         elif self.save_next_to_tarball:
-            self.output_dir = self.tarball_path.parent / f"SOSParser_{tarball_name}"
+            self.output_dir = self.tarball_path.parent / f"LinuxParser_{tarball_name}"
         else:
-            self.output_dir = Path(f"SOSParser_{tarball_name}")
+            self.output_dir = Path(f"LinuxParser_{tarball_name}")
         
         Logger.debug(f"Output directory set to: {self.output_dir}")
         
