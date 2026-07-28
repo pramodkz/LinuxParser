@@ -13,7 +13,7 @@ LABEL org.opencontainers.image.title="SOSParser"
 LABEL org.opencontainers.image.description="Linux sosreport/supportconfig analyzer"
 LABEL org.opencontainers.image.version="${VERSION}"
 LABEL org.opencontainers.image.created="${BUILD_DATE}"
-LABEL org.opencontainers.image.source="https://github.com/pramodkz/LinuxSOSparser"
+LABEL org.opencontainers.image.source="https://github.com/pramod-b-zacharia_dbk/LinuxSOSparser"
 LABEL org.opencontainers.image.revision="${VCS_REF}"
 LABEL maintainer="Samuel Matildes"
 

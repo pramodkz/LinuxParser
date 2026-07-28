@@ -638,9 +638,9 @@ Future releases will include:
 
 ## Links
 
-- **GitHub Repository**: https://github.com/pramodkz/LinuxSOSparser
+- **GitHub Repository**: https://github.com/pramod-b-zacharia_dbk/LinuxSOSparser
 - **Docker Hub**: https://hub.docker.com/r/samuelmatildes/sosparser
-- **Issue Tracker**: https://github.com/pramodkz/LinuxSOSparser/issues
+- **Issue Tracker**: https://github.com/pramod-b-zacharia_dbk/LinuxSOSparser/issues
 
 ---
 

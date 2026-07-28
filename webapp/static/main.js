@@ -366,59 +366,6 @@ class ChunkedUploader {
   }
 }
 
-// ========== Version Checker ==========
-async function checkVersion() {
-  const versionStatus = document.getElementById('version-status');
-  
-  try {
-    const response = await fetch('/api/version/check');
-    const data = await response.json();
-    
-    // Sanitize version strings — they must contain only digits, dots, and hyphens
-    const VERSION_RE = /^[0-9A-Za-z._-]{1,32}$/;
-    const safeCurrent = VERSION_RE.test(data.current) ? data.current : '';
-    const safeLatest  = VERSION_RE.test(data.latest)  ? data.latest  : '';
-
-    if (data.status === 'ok') {
-      if (data.update_available && safeLatest) {
-        // Build link element with DOM API to avoid innerHTML XSS
-        const a = document.createElement('a');
-        a.href = 'https://github.com/pramodkz/LinuxSOSparser/blob/main/README.md#update';
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-        a.className = 'version-outdated';
-        if (safeCurrent) a.title = `Current: v${safeCurrent}, Latest: v${safeLatest}`;
-        a.textContent = `\u26a0\ufe0f Update available: v${safeLatest}`;
-        versionStatus.textContent = '';
-        versionStatus.appendChild(a);
-      } else {
-        const span = document.createElement('span');
-        span.className = 'version-current';
-        span.textContent = '\u2713 Up to date';
-        versionStatus.textContent = '';
-        versionStatus.appendChild(span);
-        if (safeCurrent) versionStatus.title = `Current version: v${safeCurrent}`;
-      }
-    } else if (data.latest === null) {
-      const span = document.createElement('span');
-      span.className = 'version-unknown';
-      span.textContent = '\u2022 Version check unavailable';
-      versionStatus.textContent = '';
-      versionStatus.appendChild(span);
-      versionStatus.title = 'Unable to check for updates';
-    } else {
-      const span = document.createElement('span');
-      span.className = 'version-current';
-      span.textContent = '\u2713 Up to date';
-      versionStatus.textContent = '';
-      versionStatus.appendChild(span);
-    }
-  } catch (error) {
-    versionStatus.innerHTML = `<span class="version-unknown">• Version check unavailable</span>`;
-    versionStatus.title = 'Unable to check for updates';
-  }
-}
-
 // ========== Report Browser (only in non-public mode) ==========
 function initReportBrowser() {
   const browseBtn = document.getElementById('browse-reports-btn');
@@ -608,11 +555,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initialize report browser
   initReportBrowser();
-
-  // Check version on page load
-  if (document.getElementById('version-checker')) {
-    checkVersion();
-  }
 
   // Theme toggle
   const themeToggle = document.getElementById('theme-toggle');

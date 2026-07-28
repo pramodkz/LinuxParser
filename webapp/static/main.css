@@ -59,15 +59,6 @@
 [data-theme="light"] .flash-info {
   background: rgba(41, 89, 170, 0.1);
 }
-[data-theme="light"] .version-current {
-  color: #385f0d; background: rgba(56, 95, 13, 0.1);
-}
-[data-theme="light"] .version-outdated {
-  color: #8f5e15; background: rgba(143, 94, 21, 0.1);
-}
-[data-theme="light"] .version-outdated:hover {
-  background: rgba(143, 94, 21, 0.2);
-}
 [data-theme="light"] .upload-overlay {
   background: rgba(225, 226, 231, 0.97);
 }
@@ -403,50 +394,6 @@ main {
   justify-content: center;
 }
 
-.version-checker {
-  font-size: 0.8rem;
-}
-
-.version-status {
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-}
-
-.version-current {
-  color: #9ece6a;
-  background: rgba(158, 206, 106, 0.1);
-}
-
-.version-outdated {
-  color: #e0af68;
-  background: rgba(224, 175, 104, 0.1);
-  animation: pulse-warning 2s ease-in-out infinite;
-  text-decoration: none;
-  display: inline-block;
-  padding: 0.25rem 0.75rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-.version-outdated:hover {
-  background: rgba(224, 175, 104, 0.2);
-  transform: translateY(-1px);
-}
-
-.version-unknown {
-  color: var(--text-muted);
-  opacity: 0.7;
-}
-
-@keyframes pulse-warning {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
-}
 
 @media (min-width: 768px) {
   .footer-content {
