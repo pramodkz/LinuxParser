@@ -74,5 +74,15 @@ def setup_output_directory(output_dir: Path, template_dir: Path, static_dir: Pat
                     Logger.debug(f"Copied image from static: {image_file.name}")
                 except Exception as e:
                     Logger.warning(f"Failed to copy {image_file.name}: {e}")
+
+    # Copy the project license file so the report can link to it.
+    project_root = Path(__file__).resolve().parents[2]
+    license_source = project_root / 'LICENSE'
+    if license_source.exists():
+        try:
+            shutil.copy2(license_source, output_dir / 'LICENSE')
+            Logger.debug("Copied license file to output directory")
+        except Exception as e:
+            Logger.warning(f"Failed to copy LICENSE: {e}")
     
     Logger.debug("Output directory setup complete")
